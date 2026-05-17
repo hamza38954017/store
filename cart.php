@@ -1,6 +1,7 @@
 <?php
-session_start();
+
 require_once __DIR__ . '/helpers.php';
+session_start();
 
 $sid = session_id();
 
@@ -25,6 +26,7 @@ $bgColor      = $s['bg_color']      ?? '#0D0D1A';
 $textColor    = $s['text_color']    ?? '#FFFFFF';
 $siteName     = $s['site_name']     ?? 'Photo Seller';
 $telegramUrl  = $s['telegram_url']  ?? 'https://t.me/photoseller';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
