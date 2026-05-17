@@ -15,24 +15,70 @@ ini_set('session.use_strict_mode', 1);
 function apiCall(string $action, array $data = []): array {
     $data['action']  = $action;
     $data['api_key'] = API_KEY;
-    $ctx = stream_context_create(['http' => [
-        'method'        => 'POST',
-        'header'        => "Content-Type: application/json\r\nAccept: application/json\r\n",
-        'content'       => json_encode($data),
-        'timeout'       => 20,
-        'ignore_errors' => true,
-    ]]);
-    $resp = @file_get_contents(API_BASE . '/api.php', false, $ctx);
-    
-    // 🛑 ADD THESE THREE LINES FOR DEBUGGING
-    if (isset($_GET['debug'])) {
-        die("<pre>API URL: " . API_BASE . "/api.php\n\nRESPONSE:\n" . htmlspecialchars((string)$resp) . "</pre>");
-    }
-
-    if ($resp === false) return ['error' => 'API unreachable'];
-    return json_decode($resp, true) ?? ['error' => 'Invalid API response'];
+    return callInfinityFreeAPI(API_BASE . '/api.php', $data);
 }
 
+function callInfinityFreeAPI(string $apiUrl, array $payload): array {
+    $cookieJar = sys_get_temp_dir() . '/if_cookie_' . md5($apiUrl) . '.txt';
+
+    // --- First attempt ---
+    $response = httpPost($apiUrl, $payload, $cookieJar);
+
+    // If we got JSON back, we're done
+    $decoded = json_decode($response, true);
+    if (json_last_error() === JSON_ERROR_NONE) return $decoded;
+
+    // --- Looks like the AES challenge page ---
+    if (!str_contains($response, 'slowAES.decrypt')) {
+        return ['error' => 'Unexpected non-JSON response'];
+    }
+
+    // Parse the three hex values: a (key), b (iv), c (ciphertext)
+    if (!preg_match('/var a=toNumbers\("([0-9a-f]+)"\)/', $response, $mA) ||
+        !preg_match('/var b=toNumbers\("([0-9a-f]+)"\)/', $response, $mB) ||
+        !preg_match('/var c=toNumbers\("([0-9a-f]+)"\)/', $response, $mC)) {
+        return ['error' => 'Could not parse AES challenge'];
+    }
+
+    // Decrypt using AES-128-CBC (equivalent to slowAES mode 2)
+    $plaintext = openssl_decrypt(
+        hex2bin($mC[1]), 'AES-128-CBC',
+        hex2bin($mA[1]),
+        OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING,
+        hex2bin($mB[1])
+    );
+    if ($plaintext === false) return ['error' => 'AES decryption failed'];
+
+    // Write the __test cookie to the jar
+    $host = parse_url($apiUrl, PHP_URL_HOST);
+    file_put_contents($cookieJar,
+        "# Netscape HTTP Cookie File\n" .
+        "$host\tFALSE\t/\tFALSE\t2145916555\t__test\t" . bin2hex($plaintext) . "\n"
+    );
+
+    // --- Retry with cookie + ?i=1 ---
+    $retryUrl = $apiUrl . (str_contains($apiUrl, '?') ? '&' : '?') . 'i=1';
+    $decoded  = json_decode(httpPost($retryUrl, $payload, $cookieJar), true);
+    return $decoded ?? ['error' => 'Still not JSON after challenge'];
+}
+
+function httpPost(string $url, array $payload, string $cookieJar): string {
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode($payload),
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_COOKIEFILE     => $cookieJar,
+        CURLOPT_COOKIEJAR      => $cookieJar,
+        CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT        => 15,
+    ]);
+    $out = curl_exec($ch);
+    curl_close($ch);
+    return $out ?: '';
+}
 
 // ── Utility functions (no DB needed — computed on Render) ─────────────────
 function e(?string $str): string {
