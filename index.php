@@ -90,6 +90,7 @@ $telegramUrl    = $s['telegram_url']    ?? 'https://t.me/photoseller';
 $metaTitle    = $photo ? ($photo['meta_title'] ?: $photo['title'].' - '.$siteName) : $siteTitle;
 $metaDesc     = $photo ? ($photo['meta_description'] ?: substr(strip_tags($photo['description']),0,160)) : ($s['meta_description'] ?? '');
 $canonicalUrl = (isHttps()?'https':'http').'://'.($_SERVER['HTTP_HOST']??'localhost').($_SERVER['REQUEST_URI']??'/');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
