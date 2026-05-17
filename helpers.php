@@ -23,9 +23,16 @@ function apiCall(string $action, array $data = []): array {
         'ignore_errors' => true,
     ]]);
     $resp = @file_get_contents(API_BASE . '/api.php', false, $ctx);
+    
+    // 🛑 ADD THESE THREE LINES FOR DEBUGGING
+    if (isset($_GET['debug'])) {
+        die("<pre>API URL: " . API_BASE . "/api.php\n\nRESPONSE:\n" . htmlspecialchars((string)$resp) . "</pre>");
+    }
+
     if ($resp === false) return ['error' => 'API unreachable'];
     return json_decode($resp, true) ?? ['error' => 'Invalid API response'];
 }
+
 
 // ── Utility functions (no DB needed — computed on Render) ─────────────────
 function e(?string $str): string {
