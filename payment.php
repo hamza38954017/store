@@ -1,7 +1,7 @@
 <?php
-session_start();
 require_once __DIR__ . '/helpers.php';
 
+session_start();
 $photoId  = (int)($_GET['photo_id'] ?? 0);
 $fromCart = ($_GET['from'] ?? '') === 'cart';
 $sid      = session_id();
@@ -86,6 +86,7 @@ $gpayUrl    = "tez://upi/pay?$upiBase";
 $phonePeUrl = "phonepe://pay?$upiBase";
 $paytmUrl   = "paytmmp://pay?$upiBase";
 $genericUpi = "upi://pay?$upiBase";
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
