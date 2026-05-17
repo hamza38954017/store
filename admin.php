@@ -1,6 +1,7 @@
 <?php
-session_start();
+
 require_once __DIR__ . '/helpers.php';
+session_start();
 
 // ── Auth ──────────────────────────────────────────────────────────────────
 if (isset($_POST['login'])) {
@@ -62,6 +63,7 @@ if (isAdminLoggedIn()) {
     $recentRevUsers = $d['recentRevUsers'] ?? [];
     $s              = $d['settings']       ?? [];
 }
+?>   
 <!DOCTYPE html>
 <html lang="en">
 <head>
