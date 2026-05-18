@@ -5,8 +5,10 @@ session_start();
 
 // ── Auth ──────────────────────────────────────────────────────────────────
 if (isset($_POST['login'])) {
-    $u = $_POST['username'] ?? '';
+    // Add trim() right here to strip accidental spaces from the start or end
+    $u = trim($_POST['username'] ?? ''); 
     $p = $_POST['password'] ?? '';
+    
     $r = apiCall('admin_login', ['username'=>$u,'password'=>$p]);
     if ($r['success'] ?? false) {
         $_SESSION['admin_logged_in'] = true;
@@ -15,6 +17,7 @@ if (isset($_POST['login'])) {
     }
     $loginError = $r['msg'] ?? 'Invalid credentials.';
 }
+
 if (isset($_GET['logout'])) { session_destroy(); header('Location: admin.php'); exit; }
 
 // ── AJAX/POST handlers — proxy to API ─────────────────────────────────────
@@ -531,7 +534,7 @@ select.fc{cursor:pointer;}
   <div class="sec" id="sec-visitors">
     <div class="sec-hdr"><h2>👥 Visitor Logs <span style="font-size:.72rem;color:rgba(128,128,128,0.4)">(<?= number_format($vTotal) ?> total · 50/page)</span></h2></div>
     <div class="tw"><table>
-      <thead><tr><th>IP</th><th>Browser</th><th>OS</th><th>Screen</th><th>Referrer</th><th>Date</th></tr></thead>
+      <thead><tr><th>IP</th><th>Browser</th><th>OS</th><th>Screen (Test)</th><th>Referrer</th><th>Date</th></tr></thead>
       <tbody>
       <?php foreach ($visitors as $v): ?>
       <tr>
