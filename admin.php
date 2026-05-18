@@ -535,13 +535,14 @@ select.fc{cursor:pointer;}
       <tbody>
       <?php foreach ($visitors as $v): ?>
       <tr>
-        <td class="mono" style="font-size:.76rem"><?= e($v['ip_address']) ?></td>
-        <td style="font-size:.76rem"><?= e($v['browser_name']) ?></td>
-        <td style="font-size:.76rem"><?= e($v['os_name']) ?></td>
-        <td style="font-size:.7rem;color:rgba(128,128,128,0.45)"><?= ($v['screen_width']&&$v['screen_height']) ? $v['screen_width'].'×'.$v['screen_height'] : '—' ?></td>
-        <td><span class="truncate" style="max-width:120px;font-size:.7rem;color:rgba(128,128,128,0.45)" title="<?= e($v['referrer']) ?>"><?= e($v['referrer']?:'Direct') ?></span></td>
-        <td style="font-size:.68rem;color:rgba(128,128,128,0.38)"><?= date('d M Y H:i',strtotime($v['visited_at'])) ?></td>
+        <td class="mono" style="font-size:.76rem"><?= e($v['ip_address'] ?? 'Unknown') ?></td>
+        <td style="font-size:.76rem"><?= e($v['browser_name'] ?? 'Unknown') ?></td>
+        <td style="font-size:.76rem"><?= e($v['os_name'] ?? 'Unknown') ?></td>
+        <td style="font-size:.7rem;color:rgba(128,128,128,0.45)"><?= (!empty($v['screen_width']) && !empty($v['screen_height'])) ? $v['screen_width'].'×'.$v['screen_height'] : '—' ?></td>
+        <td><span class="truncate" style="max-width:120px;font-size:.7rem;color:rgba(128,128,128,0.45)" title="<?= e($v['referrer'] ?? '') ?>"><?= e(!empty($v['referrer']) ? $v['referrer'] : 'Direct') ?></span></td>
+        <td style="font-size:.68rem;color:rgba(128,128,128,0.38)"><?= date('d M Y H:i', strtotime($v['visited_at'] ?? 'now')) ?></td>
       </tr>
+
       <?php endforeach; ?>
       </tbody>
     </table></div>
